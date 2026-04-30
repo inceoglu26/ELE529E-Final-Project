@@ -36,6 +36,8 @@
 | UI Development | LCD interface (ILI9341 / LTDC) | 2 weeks |  
 | RTOS | Task scheduling | 2 weeks |  
 | MIDI Integration | DAW connection | 1 week |  
+| Step Sequencer Design | Loop engine, timing system, step buffer implementation | 1.5 weeks |  
+| Sequencer Integration | Pad input + recording + playback logic | 1 week |  
 
 ---
 
@@ -43,45 +45,57 @@
 
 Functional Correctness  
 - Velocity accuracy  
-- Real-time response (<10 ms)  
+  - Metric: ADC peak-to-velocity mapping linearity (R² > 0.9)  
+  - Metric: Repeatability (std deviation < 5% for identical hits)  
+- Real-time response (pad hit → trigger detection)  
+  - Metric: Detection latency < 10 ms (measured via GPIO toggle + logic analyzer)  
 - UI responsiveness  
+  - Metric: Frame update latency < 50 ms  
 
 Robustness  
 - Noise handling  
+  - Metric: False trigger rate < 1 per 100 hits  
 - Stable triggering  
+  - Metric: Double-trigger rate < 2%  
 
 Performance  
-- Low latency (<5 ms)  
-- Efficient scheduling  
+- Audio latency (pad hit → MIDI/trigger output)  
+  - Metric: End-to-end latency < 5 ms  
+- Sequencer timing accuracy  
+  - Metric: Step jitter < 2 ms  
 
 Maintainability  
 - Modular code  
+  - Metric: Separate driver layers (ADC, UI, MIDI)  
 - Documentation  
+  - Metric: Code comments + GitHub documentation  
 
 ---
 
 ## 5. System Architecture  
 
 Hardware  
-- STM32F410RB  
+- STM32H723ZG (LTDC-capable MCU for high-performance UI)  
 - Piezo Pads  
-- ILI9341 Display  
+- ILI9341 (prototype) → LTDC display (final system)  
 
 Software  
-- FreeRTOS (planned)  
-- ADC Driver  
-- UART Communication  
-- MIDI Output  
+- FreeRTOS  
+- ADC Driver (pad input)  
+- Sequencer Engine  
+- UART / MIDI Communication  
+- UI Task  
 
 ---
 
 ## 6. Activity Flow  
 
 Initialize system  
-→ Read piezo  
-→ Detect peak  
-→ Convert to velocity  
-→ Send via UART  
+→ Read piezo input  
+→ Detect peak (velocity)  
+→ Trigger output / record step  
+→ Update UI  
+→ Send MIDI (future)  
 → Repeat  
 
 ---
@@ -114,9 +128,9 @@ Display Test:
 | Risk | Mitigation |
 |------|-----------|
 | Noise | Filtering + threshold tuning |
-| UI lag | Switch to LTDC |
+| UI lag | LTDC hardware acceleration |
 | RTOS issues | Priority scheduling |
-| MIDI latency | Optimize pipeline |
+| MIDI latency | Interrupt-driven pipeline |
 
 ---
 
@@ -135,13 +149,15 @@ Velocity detection behaves correctly with respect to hit strength.
 
 ## 10. Step Sequencer (Planned Feature)  
 
-A loop-based **step sequencer** will be implemented (similar to MPC workflow).
+A loop-based **step sequencer** will be implemented (inspired by MPC-style workflow).
 
 ### Concept  
 
 - 16-step loop (1 bar)  
 - Each step can trigger pads  
 - Loop continuously plays  
+
+---
 
 ### Data Structure  
 
@@ -157,8 +173,6 @@ Each value:
 
 ### Timing  
 
-Step duration:  
-
 ```
 Step = (60 / BPM) / 4
 ```
@@ -172,15 +186,16 @@ Example:
 
 For each step:  
 
-- Check all pads  
-- Trigger active ones  
+- Iterate all pads  
+- Trigger active steps  
+- Maintain strict timing using RTOS  
 
 ---
 
 ### Required Buttons (Total: 5)
 
 - MODE (Live / Sequencer)  
-- REC  
+- REC (record input)  
 - PLAY / STOP  
 - TEMPO+  
 - TEMPO-  
@@ -189,8 +204,9 @@ For each step:
 
 ### Real-Time Constraints  
 
-- Timing jitter < 2 ms  
-- Latency < 5 ms  
+- Sequencer timing jitter < 2 ms (ensures rhythmic accuracy)  
+- Audio latency (pad → output) < 5 ms (ensures playability)  
+- UI update latency < 50 ms (ensures usability)  
 
 ---
 
@@ -206,16 +222,16 @@ For each step:
 ## 11. Remaining Timeline  
 
 Week 1  
-- FreeRTOS integration  
+- FreeRTOS integration + task separation  
 
 Week 2  
-- UI optimization  
+- UI optimization (LTDC transition)  
 
 Week 3  
-- MIDI + DAW connection  
+- MIDI + DAW integration  
 
 Week 4  
-- Latency tuning + demo  
+- Latency optimization + final demo  
 
 ---
 
@@ -227,7 +243,7 @@ Hardware Progress
 - Piezo modules integrated  
 
 GitHub  
-[Repo Link]
+https://github.com/inceoglu26/ELE529E-Final-Project  
 
 Videos  
 [Velocity Video]  
