@@ -246,5 +246,9 @@ GitHub
 https://github.com/inceoglu26/ELE529E-Final-Project  
 
 Videos  
-[Velocity Video]  
-[Display Video]
+
+Velocity Test:  
+[Drum Pad Video](./drum-pad.mp4)
+
+Display Test:  
+[LCD Display Video](./lcd-display.mp4)
